@@ -14,10 +14,14 @@ func (j JSONB) Value() (driver.Value, error) {
 }
 
 func (j *JSONB) Scan(value interface{}) error {
-	if err := json.Unmarshal(value.([]byte), &j); err != nil {
-		return err
+	var data []byte
+	switch v := value.(type) {
+	case string:
+		data = []byte(v)
+	case []byte:
+		data = v
 	}
-	return nil
+	return json.Unmarshal(data, &j)
 }
 
 type Answer struct {
@@ -39,7 +43,7 @@ type Quiz struct {
 	AuthorID  int       `json:"authorId" gorm:"author_id"`
 	QuizHash  string    `json:"quizHash" gorm:"quiz_hash"`
 	Title     string    `json:"title" gorm:"title"`
-	Questions JSONB     `json:"questions" gorm:"questions,type:jsonb"`
+	Questions JSONB     `json:"questions" gorm:"questions"`
 	Active    bool      `json:"active" gorm:"active"`
 	CreatedAt time.Time `json:"createdAt" gorm:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"updated_at"`

@@ -6,6 +6,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.8.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
+	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.2
 	github.com/prometheus/client_golang v1.13.0
 	github.com/rs/zerolog v1.28.0

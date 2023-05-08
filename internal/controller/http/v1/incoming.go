@@ -23,6 +23,7 @@ func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interfa
 	{
 		h.GET("/", r.GetAllQuiz)
 		h.GET("/:id", r.GetQuizById)
+		h.POST("/", r.SaveQuiz)
 	}
 }
 
@@ -49,11 +50,31 @@ func (s *serviceRoutes) GetQuizById(c *gin.Context) {
 	result, err := s.t.GetQuizById(c, quizID)
 	if err != nil {
 		errorResponse(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, entity.QuizResponse{
 		Success:     true,
 		Description: "",
 		Quiz:        result,
+	})
+}
+
+func (s *serviceRoutes) SaveQuiz(c *gin.Context) {
+	var request entity.Quiz
+	if err := c.ShouldBindJSON(&request); err != nil {
+		errorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	quiz, err := s.t.SaveQuiz(c, &request)
+	if err != nil {
+		errorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
+	c.JSON(http.StatusCreated, entity.QuizResponse{
+		Success:     true,
+		Description: "Опрос создан!",
+		Quiz:        quiz,
 	})
 }

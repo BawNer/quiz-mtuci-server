@@ -21,13 +21,15 @@ func New(logger *logger.Logger, r QuizRepo, a AuthRepo) *ServiceUseCase {
 }
 
 func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]entity.Quiz, error) {
-	// business logic here
 	return s.repo.GetAllQuiz(ctx)
 }
 
 func (s *ServiceUseCase) GetQuizById(ctx context.Context, quizId int) (*entity.Quiz, error) {
-
 	return s.repo.GetQuizById(ctx, quizId)
+}
+
+func (s *ServiceUseCase) SaveQuiz(ctx context.Context, quiz *entity.Quiz) (*entity.Quiz, error) {
+	return s.repo.SaveQuiz(ctx, quiz)
 }
 
 func (s *ServiceUseCase) GetUser() error {
