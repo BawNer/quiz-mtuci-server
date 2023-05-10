@@ -1,62 +1,36 @@
 package entity
 
 import (
-	"database/sql/driver"
-	"encoding/json"
 	"time"
 )
 
-type JSONBQuestions []Question
-
-func (j JSONBQuestions) Value() (driver.Value, error) {
-	valueString, err := json.MarshalIndent(j, "", "\t")
-	return string(valueString), err
+type QuizUI struct {
+	ID        int           `json:"id"`
+	AuthorID  int           `json:"authorId"`
+	Type      string        `json:"type"`
+	QuizHash  string        `json:"quizHash"`
+	Title     string        `json:"title"`
+	Questions []QuestionsUI `json:"questions"`
+	Active    bool          `json:"active"`
+	CreatedAt time.Time     `json:"createdAt"`
+	UpdatedAt time.Time     `json:"updatedAt"`
 }
 
-func (j *JSONBQuestions) Scan(value interface{}) error {
-	var data []byte
-	switch v := value.(type) {
-	case string:
-		data = []byte(v)
-	case []byte:
-		data = v
-	}
-	return json.Unmarshal(data, &j)
+type QuestionsUI struct {
+	ID             int             `json:"id"`
+	Label          string          `json:"label"`
+	Description    string          `json:"description"`
+	AnswersOptions []*AnswerOption `json:"answersOptions"`
 }
 
-type AnswerOption struct {
-	ID          int    `json:"id"`
-	QuestionID  int    `json:"questionId"`
-	Label       string `json:"label"`
-	Description string `json:"description,omitempty"`
-}
-
-type Question struct {
-	ID          int    `json:"id"`
-	QuizID      int    `json:"quizId"`
-	Label       string `json:"label"`
-	Description string `json:"description"`
-}
-
-type Quiz struct {
-	ID        int       `json:"id" gorm:"id"`
-	AuthorID  int       `json:"authorId" gorm:"author_id"`
-	Type      string    `json:"type" gorm:"type"`
-	QuizHash  string    `json:"quizHash" gorm:"quiz_hash"`
-	Title     string    `json:"title" gorm:"title"`
-	Active    bool      `json:"active" gorm:"active"`
-	CreatedAt time.Time `json:"createdAt" gorm:"created_at"`
-	UpdatedAt time.Time `json:"updatedAt" gorm:"updated_at"`
-}
-
-type QuizesResponse struct {
+type QuizResponseUI struct {
 	Success     bool    `json:"success"`
 	Description string  `json:"description"`
-	Quizes      []*Quiz `json:"quizes"`
+	Quiz        *QuizUI `json:"quiz"`
 }
 
-type QuizResponse struct {
-	Success     bool   `json:"success"`
-	Description string `json:"description"`
-	Quiz        *Quiz  `json:"quiz"`
+type QuizzesResponseUI struct {
+	Success     bool      `json:"success"`
+	Description string    `json:"description"`
+	Quizzes     []*QuizUI `json:"quizzes"`
 }

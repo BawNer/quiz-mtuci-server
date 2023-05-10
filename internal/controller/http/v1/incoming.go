@@ -29,16 +29,16 @@ func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interfa
 }
 
 func (s *serviceRoutes) GetAllQuiz(c *gin.Context) {
-	result, err := s.t.GetAllQuiz(c)
+	quizzes, err := s.t.GetAllQuiz(c)
 	if err != nil {
 		errorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, entity.QuizesResponse{
+	c.JSON(http.StatusOK, entity.QuizzesResponseUI{
 		Success:     true,
 		Description: "",
-		Quizes:      result,
+		Quizzes:     quizzes,
 	})
 }
 
@@ -49,21 +49,21 @@ func (s *serviceRoutes) GetQuizById(c *gin.Context) {
 		return
 	}
 
-	result, err := s.t.GetQuizById(c, quizID)
+	quiz, err := s.t.GetQuizById(c, quizID)
 	if err != nil {
 		errorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, entity.QuizResponse{
+	c.JSON(http.StatusOK, entity.QuizResponseUI{
 		Success:     true,
 		Description: "",
-		Quiz:        result,
+		Quiz:        quiz,
 	})
 }
 
 func (s *serviceRoutes) SaveQuiz(c *gin.Context) {
-	var request entity.Quiz
+	var request entity.QuizUI
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		errorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error parse request json, %s", err))
@@ -76,7 +76,7 @@ func (s *serviceRoutes) SaveQuiz(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, entity.QuizResponse{
+	c.JSON(http.StatusCreated, entity.QuizResponseUI{
 		Success:     true,
 		Description: "Опрос создан!",
 		Quiz:        quiz,

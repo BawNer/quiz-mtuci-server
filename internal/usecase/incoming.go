@@ -20,15 +20,15 @@ func New(logger *logger.Logger, r QuizRepo, a AuthRepo) *ServiceUseCase {
 	}
 }
 
-func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]*entity.Quiz, error) {
+func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
 	return s.repo.GetAllQuiz(ctx)
 }
 
-func (s *ServiceUseCase) GetQuizById(ctx context.Context, quizId int) (*entity.Quiz, error) {
+func (s *ServiceUseCase) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error) {
 	return s.repo.GetQuizById(ctx, quizId)
 }
 
-func (s *ServiceUseCase) SaveQuiz(ctx context.Context, quiz *entity.Quiz) (*entity.Quiz, error) {
+func (s *ServiceUseCase) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error) {
 	return s.repo.SaveQuiz(ctx, quiz)
 }
 

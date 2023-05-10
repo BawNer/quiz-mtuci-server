@@ -9,17 +9,17 @@ type AnalyzeTaskIDType string
 
 type (
 	QuizRepo interface {
-		GetAllQuiz(ctx context.Context) ([]*entity.Quiz, error)
-		GetQuizById(ctx context.Context, quizId int) (*entity.Quiz, error)
-		SaveQuiz(ctx context.Context, quiz *entity.Quiz) (*entity.Quiz, error)
+		GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error)
+		GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error)
+		SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error)
 	}
 	AuthRepo interface {
 		GetUser() error
 	}
 	UseCase interface {
-		GetAllQuiz(ctx context.Context) ([]*entity.Quiz, error)
-		GetQuizById(ctx context.Context, quizId int) (*entity.Quiz, error)
-		SaveQuiz(ctx context.Context, quiz *entity.Quiz) (*entity.Quiz, error)
+		GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error)
+		GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error)
+		SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error)
 		GetUser() error
 	}
 )

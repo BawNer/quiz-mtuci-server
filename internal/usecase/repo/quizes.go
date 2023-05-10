@@ -19,41 +19,163 @@ func New(pg *postgres.Postgres, l *logger.Logger) *ServiceRepo {
 	return &ServiceRepo{pg, l}
 }
 
-func (r *ServiceRepo) GetAllQuiz(ctx context.Context) ([]*entity.Quiz, error) {
-	var quizes []*entity.Quiz
-	result := r.DB.Table("quizes").Find(&quizes)
+func (r *ServiceRepo) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
+	var (
+		response []*entity.QuizUI
+		quizzes  []*entity.Quiz
+	)
+	quizzesResult := r.DB.Table("quizzes").Find(&quizzes)
+	if quizzesResult.Error != nil {
+		return nil, fmt.Errorf("quiz repo err %v", quizzesResult.Error)
+	}
+	for _, quiz := range quizzes {
+		var (
+			questions   []*entity.Question
+			questionsUI []entity.QuestionsUI
+		)
+		// ищем все вопросы для найденного опроса
+		if err := r.DB.Table("questions").Where("quiz_id = ?", quiz.ID).Find(&questions); err.Error != nil {
+			return nil, err.Error
+		}
+		// ищем все варианты ответа для найденного вопроса
+		for _, question := range questions {
+			var answers []*entity.AnswerOption
+			if err := r.DB.Table("answers_options").Where("question_id = ?", question.ID).Find(&answers); err.Error != nil {
+				return nil, err.Error
+			}
+			questionsUI = append(questionsUI, entity.QuestionsUI{
+				ID:             question.ID,
+				Label:          question.Label,
+				Description:    question.Description,
+				AnswersOptions: answers,
+			})
+		}
+		// собираем все в валидный ответ для фронта
+		response = append(response, &entity.QuizUI{
+			ID:        quiz.ID,
+			AuthorID:  quiz.AuthorID,
+			Type:      quiz.Type,
+			QuizHash:  quiz.QuizHash,
+			Title:     quiz.Title,
+			Questions: questionsUI,
+			Active:    quiz.Active,
+			CreatedAt: quiz.CreatedAt,
+			UpdatedAt: quiz.UpdatedAt,
+		})
+	}
+
+	return response, nil
+}
+
+func (r *ServiceRepo) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error) {
+	var (
+		questionsUI []entity.QuestionsUI
+		quiz        *entity.Quiz
+		questions   []*entity.Question
+	)
+	result := r.DB.Table("quizzes").First(&quiz, quizId)
 	if result.Error != nil {
 		return nil, fmt.Errorf("quiz repo err %v", result.Error)
 	}
-	return quizes, nil
+
+	if err := r.DB.Table("questions").Where("quiz_id = ?", quiz.ID).Find(&questions); err.Error != nil {
+		return nil, err.Error
+	}
+
+	for _, question := range questions {
+		var answers []*entity.AnswerOption
+
+		if err := r.DB.Table("answers_options").Where("question_id = ?", question.ID).Find(&answers); err.Error != nil {
+			return nil, err.Error
+		}
+
+		questionsUI = append(questionsUI, entity.QuestionsUI{
+			ID:             question.ID,
+			Label:          question.Label,
+			Description:    question.Description,
+			AnswersOptions: answers,
+		})
+	}
+
+	response := &entity.QuizUI{
+		ID:        quiz.ID,
+		AuthorID:  quiz.AuthorID,
+		Type:      quiz.Type,
+		QuizHash:  quiz.QuizHash,
+		Title:     quiz.Title,
+		Questions: questionsUI,
+		Active:    quiz.Active,
+		CreatedAt: quiz.CreatedAt,
+		UpdatedAt: quiz.UpdatedAt,
+	}
+
+	return response, nil
 }
 
-func (r *ServiceRepo) GetQuizById(ctx context.Context, quizId int) (*entity.Quiz, error) {
-	var quiz *entity.Quiz
-	result := r.DB.Table("quizes").First(&quiz, quizId)
-	if result.Error != nil {
-		return nil, fmt.Errorf("quiz repo err %v", result.Error)
+func (r *ServiceRepo) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error) {
+	var (
+		questions []entity.QuestionsUI
+		answers   []*entity.AnswerOption
+	)
+
+	newQuiz := entity.Quiz{
+		AuthorID: quiz.AuthorID,
+		Type:     quiz.Type,
+		QuizHash: uuid.New().String(),
+		Title:    quiz.Title,
+		Active:   quiz.Active,
 	}
-	return quiz, nil
-}
-
-func (r *ServiceRepo) SaveQuiz(ctx context.Context, quiz *entity.Quiz) (*entity.Quiz, error) {
-	hash := uuid.New().String()
-
-	newTerminal := map[string]interface{}{
-		"author_id": 1,
-		"quiz_hash": hash,
-		"title":     quiz.Title,
-		"active":    true,
+	if createQuiz := r.DB.Table("quizzes").Create(&newQuiz); createQuiz.Error != nil {
+		return nil, createQuiz.Error
 	}
 
-	if result := r.DB.Table("quizes").Create(newTerminal); result.Error != nil {
-		return nil, result.Error
+	// добавляем вопросы к квизу
+	for _, question := range quiz.Questions {
+		newQuestions := entity.Question{
+			QuizID:      newQuiz.ID,
+			Label:       question.Label,
+			Description: question.Description,
+		}
+		if createQuestion := r.DB.Table("questions").Create(&newQuestions); createQuestion.Error != nil {
+			return nil, createQuestion.Error
+		}
+		// добавляем варианты ответа
+		for _, answer := range question.AnswersOptions {
+			newAnswerOption := entity.AnswerOption{
+				QuestionID:  newQuestions.ID,
+				Label:       answer.Label,
+				Description: answer.Description,
+			}
+			if createAnswerOption := r.DB.Table("answers_options").Create(&newAnswerOption); createAnswerOption.Error != nil {
+				return nil, createAnswerOption.Error
+			}
+
+			answers = append(answers, &entity.AnswerOption{
+				ID:          newAnswerOption.ID,
+				QuestionID:  newQuestions.ID,
+				Label:       newAnswerOption.Label,
+				Description: newAnswerOption.Description,
+			})
+		}
+
+		questions = append(questions, entity.QuestionsUI{
+			ID:             newQuestions.ID,
+			Label:          newQuestions.Label,
+			Description:    newQuestions.Description,
+			AnswersOptions: answers,
+		})
 	}
 
-	var createdQuiz *entity.Quiz
-	if response := r.DB.Table("quizes").Where("quiz_hash = ?", hash).Find(&createdQuiz); response.Error != nil {
-		return nil, response.Error
+	createdQuiz := &entity.QuizUI{
+		ID:        newQuiz.ID,
+		AuthorID:  newQuiz.AuthorID,
+		Type:      newQuiz.Type,
+		QuizHash:  newQuiz.QuizHash,
+		Title:     newQuiz.Title,
+		Questions: questions,
+		Active:    newQuiz.Active,
+		CreatedAt: newQuiz.CreatedAt,
+		UpdatedAt: newQuiz.UpdatedAt,
 	}
 
 	return createdQuiz, nil
