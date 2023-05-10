@@ -20,7 +20,7 @@ func New(logger *logger.Logger, r QuizRepo, a AuthRepo) *ServiceUseCase {
 	}
 }
 
-func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]entity.Quiz, error) {
+func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]*entity.Quiz, error) {
 	return s.repo.GetAllQuiz(ctx)
 }
 

@@ -19,8 +19,8 @@ func New(pg *postgres.Postgres, l *logger.Logger) *ServiceRepo {
 	return &ServiceRepo{pg, l}
 }
 
-func (r *ServiceRepo) GetAllQuiz(ctx context.Context) ([]entity.Quiz, error) {
-	var quizes []entity.Quiz
+func (r *ServiceRepo) GetAllQuiz(ctx context.Context) ([]*entity.Quiz, error) {
+	var quizes []*entity.Quiz
 	result := r.DB.Table("quizes").Find(&quizes)
 	if result.Error != nil {
 		return nil, fmt.Errorf("quiz repo err %v", result.Error)
@@ -44,7 +44,6 @@ func (r *ServiceRepo) SaveQuiz(ctx context.Context, quiz *entity.Quiz) (*entity.
 		"author_id": 1,
 		"quiz_hash": hash,
 		"title":     quiz.Title,
-		"questions": quiz.Questions,
 		"active":    true,
 	}
 

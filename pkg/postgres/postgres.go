@@ -19,7 +19,7 @@ type Postgres struct {
 func New(cfg config.Postgres) (*Postgres, error) {
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%d sslmode=%s", cfg.User, cfg.Password, cfg.DbName, cfg.Host, cfg.Port, cfg.SSLMode),
-		PreferSimpleProtocol: true, // disables implicit prepared statement usage
+		PreferSimpleProtocol: false, // disables implicit prepared statement usage
 	}), &gorm.Config{})
 
 	if err != nil {

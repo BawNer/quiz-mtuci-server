@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS quizes(
   author_id serial,
   quiz_hash character varying(64),
   title character varying(128),
-  questions jsonb,
+  type character varying(64),
   active bool default false,
   created_at timestamp without time zone default now(),
   updated_at timestamp without time zone default now()

@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
 	"quiz-mtuci-server/internal/entity"
 	"strconv"
@@ -31,6 +32,7 @@ func (s *serviceRoutes) GetAllQuiz(c *gin.Context) {
 	result, err := s.t.GetAllQuiz(c)
 	if err != nil {
 		errorResponse(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, entity.QuizesResponse{
@@ -62,14 +64,16 @@ func (s *serviceRoutes) GetQuizById(c *gin.Context) {
 
 func (s *serviceRoutes) SaveQuiz(c *gin.Context) {
 	var request entity.Quiz
+
 	if err := c.ShouldBindJSON(&request); err != nil {
-		errorResponse(c, http.StatusInternalServerError, err.Error())
+		errorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error parse request json, %s", err))
 		return
 	}
 
 	quiz, err := s.t.SaveQuiz(c, &request)
 	if err != nil {
 		errorResponse(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusCreated, entity.QuizResponse{

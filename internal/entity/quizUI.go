@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-type JSONB map[string]interface{}
+type JSONBQuestions []Question
 
-func (j JSONB) Value() (driver.Value, error) {
+func (j JSONBQuestions) Value() (driver.Value, error) {
 	valueString, err := json.MarshalIndent(j, "", "\t")
 	return string(valueString), err
 }
 
-func (j *JSONB) Scan(value interface{}) error {
+func (j *JSONBQuestions) Scan(value interface{}) error {
 	var data []byte
 	switch v := value.(type) {
 	case string:
@@ -24,35 +24,35 @@ func (j *JSONB) Scan(value interface{}) error {
 	return json.Unmarshal(data, &j)
 }
 
-type Answer struct {
+type AnswerOption struct {
 	ID          int    `json:"id"`
+	QuestionID  int    `json:"questionId"`
 	Label       string `json:"label"`
 	Description string `json:"description,omitempty"`
-	IsTrue      bool   `json:"isTrue"`
 }
 
 type Question struct {
-	ID          int      `json:"id"`
-	Label       string   `json:"label"`
-	Description string   `json:"description"`
-	Answers     []Answer `json:"answers"`
+	ID          int    `json:"id"`
+	QuizID      int    `json:"quizId"`
+	Label       string `json:"label"`
+	Description string `json:"description"`
 }
 
 type Quiz struct {
 	ID        int       `json:"id" gorm:"id"`
 	AuthorID  int       `json:"authorId" gorm:"author_id"`
+	Type      string    `json:"type" gorm:"type"`
 	QuizHash  string    `json:"quizHash" gorm:"quiz_hash"`
 	Title     string    `json:"title" gorm:"title"`
-	Questions JSONB     `json:"questions" gorm:"questions"`
 	Active    bool      `json:"active" gorm:"active"`
 	CreatedAt time.Time `json:"createdAt" gorm:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"updated_at"`
 }
 
 type QuizesResponse struct {
-	Success     bool   `json:"success"`
-	Description string `json:"description"`
-	Quizes      []Quiz `json:"quizes"`
+	Success     bool    `json:"success"`
+	Description string  `json:"description"`
+	Quizes      []*Quiz `json:"quizes"`
 }
 
 type QuizResponse struct {
