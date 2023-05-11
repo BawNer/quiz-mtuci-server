@@ -21,47 +21,91 @@ func New(pg *postgres.Postgres, l *logger.Logger) *ServiceRepo {
 
 func (r *ServiceRepo) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
 	var (
-		response []*entity.QuizUI
-		quizzes  []*entity.Quiz
+		responseDB []entity.QuizEntityDB
+		response   []*entity.QuizUI
 	)
-	quizzesResult := r.DB.Table("quizzes").Find(&quizzes)
-	if quizzesResult.Error != nil {
-		return nil, fmt.Errorf("quiz repo err %v", quizzesResult.Error)
+
+	err := r.DB.Table("answers_options").Select(`
+		quizzes.id, quizzes.author_id, quizzes.type, quizzes.quiz_hash,
+		quizzes.active, quizzes.created_at, quizzes.updated_at, quizzes.title,
+		questions.id as question_id, questions.label as question_label, questions.description as question_description, questions.quiz_id as question_quiz_id,
+		answers_options.id as answer_id, answers_options.label as answer_label, answers_options.description as answer_description, answers_options.question_id as answer_question_id
+	`).Joins(`left join questions ON answers_options.question_id = questions.id`).Joins(`left join quizzes ON questions.quiz_id = quizzes.id`).Scan(&responseDB)
+
+	if err.Error != nil {
+		return nil, err.Error
 	}
-	for _, quiz := range quizzes {
-		var (
-			questions   []*entity.Question
-			questionsUI []entity.QuestionsUI
-		)
-		// ищем все вопросы для найденного опроса
-		if err := r.DB.Table("questions").Where("quiz_id = ?", quiz.ID).Find(&questions); err.Error != nil {
-			return nil, err.Error
-		}
-		// ищем все варианты ответа для найденного вопроса
-		for _, question := range questions {
-			var answers []*entity.AnswerOption
-			if err := r.DB.Table("answers_options").Where("question_id = ?", question.ID).Find(&answers); err.Error != nil {
-				return nil, err.Error
-			}
-			questionsUI = append(questionsUI, entity.QuestionsUI{
-				ID:             question.ID,
-				Label:          question.Label,
-				Description:    question.Description,
+
+	iter := 0
+	for _, row := range responseDB {
+		if response == nil {
+			var (
+				question []entity.QuestionsUI
+				answers  []*entity.AnswerOption
+			)
+			answers = append(answers, &entity.AnswerOption{
+				ID:          row.AnswerID,
+				QuestionID:  row.QuestionID,
+				Label:       row.AnswerLabel,
+				Description: row.AnswerDescription,
+			})
+			question = append(question, entity.QuestionsUI{
+				ID:             row.QuestionID,
+				Label:          row.QuestionLabel,
+				Description:    row.QuestionDescription,
 				AnswersOptions: answers,
 			})
+			response = append(response, &entity.QuizUI{
+				ID:        row.ID,
+				AuthorID:  row.AuthorID,
+				Type:      row.Type,
+				QuizHash:  row.QuizHash,
+				Title:     row.Title,
+				Questions: question,
+				Active:    row.Active,
+				CreatedAt: row.CreatedAt,
+				UpdatedAt: row.UpdatedAt,
+			})
+		} else if response[iter].ID == row.QuestionQuizID {
+			// добавляем в текущий вопрос ответы
+			qiter := len(response[iter].Questions) - 1
+			response[iter].Questions[qiter].AnswersOptions = append(response[iter].Questions[qiter].AnswersOptions, &entity.AnswerOption{
+				ID:          row.AnswerID,
+				QuestionID:  row.QuestionID,
+				Label:       row.AnswerLabel,
+				Description: row.AnswerDescription,
+			})
+		} else {
+			// переходим на некст итерацию
+			var (
+				question []entity.QuestionsUI
+				answers  []*entity.AnswerOption
+			)
+			answers = append(answers, &entity.AnswerOption{
+				ID:          row.AnswerID,
+				QuestionID:  row.QuestionID,
+				Label:       row.AnswerLabel,
+				Description: row.AnswerDescription,
+			})
+			question = append(question, entity.QuestionsUI{
+				ID:             row.QuestionID,
+				Label:          row.QuestionLabel,
+				Description:    row.QuestionDescription,
+				AnswersOptions: answers,
+			})
+			response = append(response, &entity.QuizUI{
+				ID:        row.ID,
+				AuthorID:  row.AuthorID,
+				Type:      row.Type,
+				QuizHash:  row.QuizHash,
+				Title:     row.Title,
+				Questions: question,
+				Active:    row.Active,
+				CreatedAt: row.CreatedAt,
+				UpdatedAt: row.UpdatedAt,
+			})
+			iter++
 		}
-		// собираем все в валидный ответ для фронта
-		response = append(response, &entity.QuizUI{
-			ID:        quiz.ID,
-			AuthorID:  quiz.AuthorID,
-			Type:      quiz.Type,
-			QuizHash:  quiz.QuizHash,
-			Title:     quiz.Title,
-			Questions: questionsUI,
-			Active:    quiz.Active,
-			CreatedAt: quiz.CreatedAt,
-			UpdatedAt: quiz.UpdatedAt,
-		})
 	}
 
 	return response, nil
