@@ -20,7 +20,7 @@ type QuestionsUI struct {
 	ID             int             `json:"id"`
 	Label          string          `json:"label"`
 	Description    string          `json:"description"`
-	AnswersOptions []*AnswerOption `json:"answersOptions"`
+	AnswersOptions []AnswersOption `json:"answersOptions"`
 }
 
 type QuizResponseUI struct {

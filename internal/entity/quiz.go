@@ -24,7 +24,7 @@ func (j *JSONBQuestions) Scan(value interface{}) error {
 	return json.Unmarshal(data, &j)
 }
 
-type AnswerOption struct {
+type AnswersOption struct {
 	ID          int    `json:"id"`
 	QuestionID  int    `json:"-"`
 	Label       string `json:"label"`
@@ -59,7 +59,6 @@ type QuizEntityDB struct {
 	CreatedAt           time.Time `gorm:"created_at"`
 	UpdatedAt           time.Time `gorm:"updated_at"`
 	QuestionID          int       `gorm:"question_id"`
-	QuestionQuizID      int       `gorm:"question_quiz_id"`
 	QuestionLabel       string    `gorm:"question_label"`
 	QuestionDescription string    `gorm:"question_description"`
 	AnswerID            int       `gorm:"answer_id"`
