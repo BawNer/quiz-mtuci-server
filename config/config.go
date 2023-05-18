@@ -11,6 +11,7 @@ type (
 		HTTP
 		Log
 		Postgres
+		MySQL
 	}
 
 	HTTP struct {
@@ -19,6 +20,16 @@ type (
 
 	Log struct {
 		Level string `env:"LOG_LEVEL,required"`
+	}
+
+	MySQL struct {
+		MaxOpenConns int    `env:"SQL_MAX_OPEN_CONNS"`
+		MaxIdleConns int    `env:"SQL_MAX_IDLE_CONNS"`
+		Host         string `env:"SQL_HOST,required"`
+		Port         int    `env:"SQL_PORT,required"`
+		User         string `env:"SQL_USER,required"`
+		Password     string `env:"SQL_PASSWORD,required"`
+		DbName       string `env:"SQL_DB,required"`
 	}
 
 	Postgres struct {
