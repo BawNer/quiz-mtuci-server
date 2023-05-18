@@ -48,21 +48,3 @@ type Quiz struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
-
-type QuizEntityDB struct {
-	ID                  int       `gorm:"id"`
-	AuthorID            int       `gorm:"author_id"`
-	Type                string    `gorm:"type"`
-	QuizHash            string    `gorm:"quiz_hash"`
-	Title               string    `gorm:"title"`
-	Active              bool      `gorm:"active"`
-	CreatedAt           time.Time `gorm:"created_at"`
-	UpdatedAt           time.Time `gorm:"updated_at"`
-	QuestionID          int       `gorm:"question_id"`
-	QuestionLabel       string    `gorm:"question_label"`
-	QuestionDescription string    `gorm:"question_description"`
-	AnswerID            int       `gorm:"answer_id"`
-	AnswerQuestionID    int       `gorm:"answer_question_id"`
-	AnswerLabel         string    `gorm:"answer_label"`
-	AnswerDescription   string    `gorm:"answer_description"`
-}
