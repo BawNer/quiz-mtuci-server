@@ -1,19 +1,26 @@
 package repo
 
 import (
+	"context"
+	"quiz-mtuci-server/internal/entity"
 	"quiz-mtuci-server/pkg/logger"
-	"quiz-mtuci-server/pkg/postgres"
+	"quiz-mtuci-server/pkg/mysql"
 )
 
 type AuthRepo struct {
-	*postgres.Postgres
+	*mysql.MySQL
 	l *logger.Logger
 }
 
-func NewAuthRepo(pg *postgres.Postgres, l *logger.Logger) *AuthRepo {
-	return &AuthRepo{pg, l}
+func NewAuthRepo(msq *mysql.MySQL, l *logger.Logger) *AuthRepo {
+	return &AuthRepo{msq, l}
 }
 
-func (r *AuthRepo) GetUser() error {
-	return nil
+func (r *AuthRepo) GetUserByLoginWithPassword(ctx context.Context, user entity.UserLogin) (*entity.User, error) {
+	var foundUser *entity.User
+	if err := r.DB.Table("users").Where("email = ?", user.Login).Where("pass_text = ?", user.Password).First(&foundUser); err.Error != nil {
+		return nil, err.Error
+	}
+
+	return foundUser, nil
 }

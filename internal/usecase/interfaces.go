@@ -14,12 +14,12 @@ type (
 		SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error)
 	}
 	AuthRepo interface {
-		GetUser() error
+		GetUserByLoginWithPassword(ctx context.Context, login entity.UserLogin) (*entity.User, error)
 	}
 	UseCase interface {
 		GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error)
 		GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error)
 		SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error)
-		GetUser() error
+		GetUserByLoginWithPassword(ctx context.Context, login entity.UserLogin) (*entity.User, error)
 	}
 )

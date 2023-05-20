@@ -16,8 +16,10 @@ type MySQL struct {
 
 // New -.
 func New(cfg config.MySQL) (*MySQL, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DbName)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		DSN:                       fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", cfg.User, cfg.Password, cfg.Host, cfg.DbName),
+		SkipInitializeWithVersion: false,
+	}), &gorm.Config{})
 
 	if err != nil {
 		return nil, err

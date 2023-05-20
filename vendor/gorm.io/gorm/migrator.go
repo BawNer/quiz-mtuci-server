@@ -1,22 +1,22 @@
 package gorm
 
 import (
+	"reflect"
+
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 )
 
 // Migrator returns migrator
 func (db *DB) Migrator() Migrator {
+	tx := db.getInstance()
+
 	// apply scopes to migrator
-	for len(db.Statement.scopes) > 0 {
-		scopes := db.Statement.scopes
-		db.Statement.scopes = nil
-		for _, scope := range scopes {
-			db = scope(db)
-		}
+	for len(tx.Statement.scopes) > 0 {
+		tx = tx.executeScopes()
 	}
 
-	return db.Dialector.Migrator(db.Session(&Session{}))
+	return tx.Dialector.Migrator(tx.Session(&Session{}))
 }
 
 // AutoMigrate run auto migration for given models
@@ -26,19 +26,45 @@ func (db *DB) AutoMigrate(dst ...interface{}) error {
 
 // ViewOption view option
 type ViewOption struct {
-	Replace     bool
-	CheckOption string
-	Query       *DB
+	Replace     bool   // If true, exec `CREATE`. If false, exec `CREATE OR REPLACE`
+	CheckOption string // optional. e.g. `WITH [ CASCADED | LOCAL ] CHECK OPTION`
+	Query       *DB    // required subquery.
 }
 
+// ColumnType column type interface
 type ColumnType interface {
 	Name() string
-	DatabaseTypeName() string
+	DatabaseTypeName() string                 // varchar
+	ColumnType() (columnType string, ok bool) // varchar(64)
+	PrimaryKey() (isPrimaryKey bool, ok bool)
+	AutoIncrement() (isAutoIncrement bool, ok bool)
 	Length() (length int64, ok bool)
 	DecimalSize() (precision int64, scale int64, ok bool)
 	Nullable() (nullable bool, ok bool)
+	Unique() (unique bool, ok bool)
+	ScanType() reflect.Type
+	Comment() (value string, ok bool)
+	DefaultValue() (value string, ok bool)
 }
 
+type Index interface {
+	Table() string
+	Name() string
+	Columns() []string
+	PrimaryKey() (isPrimaryKey bool, ok bool)
+	Unique() (unique bool, ok bool)
+	Option() string
+}
+
+// TableType table type interface
+type TableType interface {
+	Schema() string
+	Name() string
+	Type() string
+	Comment() (comment string, ok bool)
+}
+
+// Migrator migrator interface
 type Migrator interface {
 	// AutoMigrate
 	AutoMigrate(dst ...interface{}) error
@@ -46,12 +72,15 @@ type Migrator interface {
 	// Database
 	CurrentDatabase() string
 	FullDataTypeOf(*schema.Field) clause.Expr
+	GetTypeAliases(databaseTypeName string) []string
 
 	// Tables
 	CreateTable(dst ...interface{}) error
 	DropTable(dst ...interface{}) error
 	HasTable(dst interface{}) bool
 	RenameTable(oldName, newName interface{}) error
+	GetTables() (tableList []string, err error)
+	TableType(dst interface{}) (TableType, error)
 
 	// Columns
 	AddColumn(dst interface{}, field string) error
@@ -76,4 +105,5 @@ type Migrator interface {
 	DropIndex(dst interface{}, name string) error
 	HasIndex(dst interface{}, name string) bool
 	RenameIndex(dst interface{}, oldName, newName string) error
+	GetIndexes(dst interface{}) ([]Index, error)
 }

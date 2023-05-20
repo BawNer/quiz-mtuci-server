@@ -9,9 +9,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.UseCase) {
+func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.UseCase, m *usecase.MiddlewareStruct) {
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
+	handler.Use(m.Cors())
 
 	// Prometheus metrics
 	handler.GET("/metrics", gin.WrapH(promhttp.Handler()))
@@ -19,7 +20,8 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.UseCase) {
 	// Routers
 	h := handler.Group("/v1")
 	{
-		newQuizRoutes(h, t, l)
+		newQuizRoutes(h, t, l, m)
+		newUserRoutes(h, t, l, m)
 	}
 
 	// register metrics

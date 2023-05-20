@@ -12,6 +12,7 @@ type (
 		Log
 		Postgres
 		MySQL
+		JWT
 	}
 
 	HTTP struct {
@@ -41,6 +42,10 @@ type (
 		Password     string `env:"PG_PASSWORD,required"`
 		DbName       string `env:"PG_DB,required"`
 		SSLMode      string `env:"PG_SSL_MODE,required"`
+	}
+
+	JWT struct {
+		Secret string `env:"SECRET,required"`
 	}
 )
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"quiz-mtuci-server/pkg/mysql"
 	"syscall"
 
 	"github.com/gin-gonic/gin"
@@ -27,21 +28,25 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
-	pgA, err := postgres.New(cfg.Postgres)
+	msq, err := mysql.New(cfg.MySQL)
 
 	if err != nil {
 		l.Fatal().Err(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}
-	defer pgA.Close()
+	defer msq.Close()
+
+	jwtManager := usecase.NewJWT([]byte(cfg.JWT.Secret))
 
 	quizUseCase := usecase.New(
 		l,
+		jwtManager,
 		repo.New(pg, l),
-		repo.NewAuthRepo(pgA, l),
+		repo.NewAuthRepo(msq, l),
 	)
 
 	handler := gin.New()
-	v1.NewRouter(handler, l, quizUseCase)
+	middlewares := usecase.NewMiddleware(jwtManager, cfg)
+	v1.NewRouter(handler, l, quizUseCase, middlewares)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

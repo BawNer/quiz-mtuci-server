@@ -15,16 +15,27 @@ import (
 type serviceRoutes struct {
 	t usecase.UseCase
 	l logger.Interface
+	m *usecase.MiddlewareStruct
 }
 
-func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interface) {
-	r := &serviceRoutes{t, l}
+func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interface, m *usecase.MiddlewareStruct) {
+	r := &serviceRoutes{t, l, m}
 
 	h := handler.Group("/quiz")
+	h.Use(m.AuthGuard())
 	{
 		h.GET("/", r.GetAllQuiz)
 		h.GET("/:id", r.GetQuizById)
 		h.POST("/", r.SaveQuiz)
+	}
+}
+
+func newUserRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interface, m *usecase.MiddlewareStruct) {
+	r := &serviceRoutes{t, l, m}
+
+	h := handler.Group("/users")
+	{
+		h.POST("/login", r.GetUserByLoginWithPassword)
 	}
 }
 
@@ -80,5 +91,25 @@ func (s *serviceRoutes) SaveQuiz(c *gin.Context) {
 		Success:     true,
 		Description: "Опрос создан!",
 		Quiz:        quiz,
+	})
+}
+
+func (s *serviceRoutes) GetUserByLoginWithPassword(c *gin.Context) {
+	var userLogin entity.UserLogin
+	if err := c.ShouldBindJSON(&userLogin); err != nil {
+		errorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error parse body, %v", err))
+	}
+
+	user, err := s.t.GetUserByLoginWithPassword(c, userLogin)
+	if err != nil {
+		errorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Header("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+	c.JSON(http.StatusOK, entity.ResponseUserLogin{
+		Success:     true,
+		Description: "Login success",
+		User:        user,
 	})
 }

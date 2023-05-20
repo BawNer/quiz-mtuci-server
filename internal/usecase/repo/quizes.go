@@ -10,16 +10,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type ServiceRepo struct {
+type QuizRepo struct {
 	*postgres.Postgres
 	l *logger.Logger
 }
 
-func New(pg *postgres.Postgres, l *logger.Logger) *ServiceRepo {
-	return &ServiceRepo{pg, l}
+func New(pg *postgres.Postgres, l *logger.Logger) *QuizRepo {
+	return &QuizRepo{pg, l}
 }
 
-func (r *ServiceRepo) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
+func (r *QuizRepo) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
 	var (
 		response []*entity.QuizUI
 		quizzes  []entity.Quiz
@@ -68,7 +68,7 @@ func (r *ServiceRepo) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) 
 	return response, nil
 }
 
-func (r *ServiceRepo) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error) {
+func (r *QuizRepo) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error) {
 	var (
 		questionsUI []entity.QuestionsUI
 		quiz        entity.Quiz
@@ -113,7 +113,7 @@ func (r *ServiceRepo) GetQuizById(ctx context.Context, quizId int) (*entity.Quiz
 	return response, nil
 }
 
-func (r *ServiceRepo) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error) {
+func (r *QuizRepo) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error) {
 	var (
 		questions []entity.QuestionsUI
 		answers   []entity.AnswersOption
