@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"quiz-mtuci-server/internal/entity"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -52,4 +53,19 @@ func (j *JWT) Validate(token string) (map[string]interface{}, error) {
 	}
 
 	return claims["dat"].(map[string]interface{}), nil
+}
+
+func (j *JWT) Parse(payload map[string]interface{}) entity.User {
+	id := payload["id"].(float64)
+	email := payload["email"].(string)
+	name := payload["name"].(string)
+	zach := payload["numberZach"].(string)
+	user := entity.User{
+		ID:         int(id),
+		Email:      email,
+		Name:       name,
+		NumberZach: zach,
+	}
+
+	return user
 }

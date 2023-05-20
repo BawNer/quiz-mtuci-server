@@ -32,6 +32,7 @@ func (s *ServiceUseCase) GetQuizById(ctx context.Context, quizId int) (*entity.Q
 }
 
 func (s *ServiceUseCase) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error) {
+	quiz.AuthorID = s.jwt.Parse(ctx.Value("token").(map[string]interface{})).ID
 	return s.repo.SaveQuiz(ctx, quiz)
 }
 
