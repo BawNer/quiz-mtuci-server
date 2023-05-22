@@ -31,6 +31,10 @@ func (s *ServiceUseCase) GetQuizById(ctx context.Context, quizId int) (*entity.Q
 	return s.repo.GetQuizById(ctx, quizId)
 }
 
+func (s *ServiceUseCase) GetQuizByHash(ctx context.Context, quizHash string) (*entity.QuizUI, error) {
+	return s.repo.GetQuizByHash(ctx, quizHash)
+}
+
 func (s *ServiceUseCase) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error) {
 	quiz.AuthorID = s.jwt.Parse(ctx.Value("token").(map[string]interface{})).ID
 	return s.repo.SaveQuiz(ctx, quiz)
@@ -51,6 +55,7 @@ func (s *ServiceUseCase) GetUserByLoginWithPassword(ctx context.Context, user en
 		Name:       foundedUser.Name,
 		PassText:   foundedUser.PassText,
 		NumberZach: foundedUser.NumberZach,
+		IsStudent:  foundedUser.IsStudent,
 		Token:      token,
 	}
 

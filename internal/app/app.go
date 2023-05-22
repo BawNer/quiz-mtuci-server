@@ -31,7 +31,7 @@ func Run(cfg *config.Config) {
 	msq, err := mysql.New(cfg.MySQL)
 
 	if err != nil {
-		l.Fatal().Err(fmt.Errorf("app - Run - postgres.New: %w", err))
+		l.Fatal().Err(fmt.Errorf("app - Run - mysql.New: %w", err))
 	}
 	defer msq.Close()
 

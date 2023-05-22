@@ -26,6 +26,7 @@ func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interfa
 	{
 		h.GET("/", r.GetAllQuiz)
 		h.GET("/:id", r.GetQuizById)
+		h.GET("/link/:hash", r.GetQuizByHash)
 		h.POST("/", r.SaveQuiz)
 	}
 }
@@ -61,6 +62,22 @@ func (s *serviceRoutes) GetQuizById(c *gin.Context) {
 	}
 
 	quiz, err := s.t.GetQuizById(c, quizID)
+	if err != nil {
+		errorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, entity.QuizResponseUI{
+		Success:     true,
+		Description: "",
+		Quiz:        quiz,
+	})
+}
+
+func (s *serviceRoutes) GetQuizByHash(c *gin.Context) {
+	quizHash := c.Param("hash")
+
+	quiz, err := s.t.GetQuizByHash(c, quizHash)
 	if err != nil {
 		errorResponse(c, http.StatusInternalServerError, err.Error())
 		return
