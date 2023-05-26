@@ -226,3 +226,12 @@ func (r *QuizRepo) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.Q
 
 	return createdQuiz, nil
 }
+
+func (r *QuizRepo) SaveReviewers(ctx context.Context, reviewer *entity.Reviewers) error {
+	err := r.DB.Table("reviewers").Save(&reviewer)
+	if err.Error != nil {
+		return err.Error
+	}
+
+	return nil
+}

@@ -61,3 +61,8 @@ func (s *ServiceUseCase) GetUserByLoginWithPassword(ctx context.Context, user en
 
 	return response, nil
 }
+
+func (s *ServiceUseCase) SaveReviewers(ctx context.Context, reviewer *entity.Reviewers) error {
+	reviewer.UserID = s.jwt.Parse(ctx.Value("token").(map[string]interface{})).ID
+	return s.repo.SaveReviewers(ctx, reviewer)
+}

@@ -26,8 +26,9 @@ func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interfa
 	{
 		h.GET("/", r.GetAllQuiz)
 		h.GET("/:id", r.GetQuizById)
-		h.GET("/link/:hash", r.GetQuizByHash)
+		h.GET("/hash/:hash", r.GetQuizByHash)
 		h.POST("/", r.SaveQuiz)
+		h.POST("/respond", r.SaveReviewerRespond)
 	}
 }
 
@@ -128,5 +129,24 @@ func (s *serviceRoutes) GetUserByLoginWithPassword(c *gin.Context) {
 		Success:     true,
 		Description: "Login success",
 		User:        user,
+	})
+}
+
+func (s *serviceRoutes) SaveReviewerRespond(c *gin.Context) {
+	var respond *entity.Reviewers
+	if err := c.ShouldBindJSON(&respond); err != nil {
+		errorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error parse body, %v", err))
+		return
+	}
+
+	err := s.t.SaveReviewers(c, respond)
+	if err != nil {
+		errorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error save reviewer %+v", err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, entity.ReviewersResponse{
+		Success:     true,
+		Description: "Ответ сохранен!",
 	})
 }
