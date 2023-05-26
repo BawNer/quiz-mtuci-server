@@ -24,7 +24,21 @@ func New(logger *logger.Logger, j JWT, r QuizRepo, a AuthRepo) *ServiceUseCase {
 }
 
 func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
-	return s.repo.GetAllQuiz(ctx)
+	quizzes, err := s.repo.GetAllQuiz(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, quiz := range quizzes {
+		user, err := s.auth.GetUserByID(ctx, quiz.AuthorID)
+		if err != nil {
+			return nil, err
+		}
+
+		quiz.Author = user
+	}
+
+	return quizzes, nil
 }
 
 func (s *ServiceUseCase) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error) {

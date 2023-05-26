@@ -6,7 +6,8 @@ import (
 
 type QuizUI struct {
 	ID        int           `json:"id"`
-	AuthorID  int           `json:"authorId"`
+	AuthorID  int           `json:"-"`
+	Author    *User         `json:"author"`
 	Type      string        `json:"type"`
 	QuizHash  string        `json:"quizHash"`
 	Title     string        `json:"title"`

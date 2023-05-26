@@ -17,6 +17,7 @@ type (
 	}
 	AuthRepo interface {
 		GetUserByLoginWithPassword(ctx context.Context, login entity.UserLogin) (*entity.User, error)
+		GetUserByID(ctx context.Context, id int) (*entity.User, error)
 	}
 	UseCase interface {
 		GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error)

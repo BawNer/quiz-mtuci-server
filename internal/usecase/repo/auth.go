@@ -24,3 +24,12 @@ func (r *AuthRepo) GetUserByLoginWithPassword(ctx context.Context, user entity.U
 
 	return foundUser, nil
 }
+
+func (r *AuthRepo) GetUserByID(ctx context.Context, id int) (*entity.User, error) {
+	var user *entity.User
+	if err := r.DB.Table("users").First(&user, id); err.Error != nil {
+		return nil, err.Error
+	}
+
+	return user, nil
+}

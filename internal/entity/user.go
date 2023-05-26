@@ -5,7 +5,7 @@ type User struct {
 	Email      string `json:"email"`
 	Name       string `json:"name"`
 	PassText   string `json:"-"`
-	NumberZach string `json:"numberZach"`
-	IsStudent  int    `json:"isStudent"`
+	NumberZach string `json:"numberZach,omitempty"`
+	IsStudent  int    `json:"-"`
 	Token      string `json:"-"`
 }
