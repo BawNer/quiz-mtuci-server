@@ -17,19 +17,6 @@ type serviceRoutes struct {
 	m *usecase.MiddlewareStruct
 }
 
-type K interface{}
-
-type T interface{}
-
-func containsValue(m map[K]T, v T) bool {
-	for _, x := range m {
-		if x == v {
-			return true
-		}
-	}
-	return false
-}
-
 func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interface, m *usecase.MiddlewareStruct) {
 	r := &serviceRoutes{t, l, m}
 

@@ -6,8 +6,6 @@ import (
 	"quiz-mtuci-server/internal/entity"
 	"quiz-mtuci-server/pkg/logger"
 	"quiz-mtuci-server/pkg/postgres"
-
-	"github.com/google/uuid"
 )
 
 type QuizRepo struct {
@@ -24,7 +22,7 @@ func (r *QuizRepo) GetAllQuiz(ctx context.Context, groupID int) ([]*entity.QuizE
 		response []*entity.QuizEntityDB
 		quizzes  []entity.Quiz
 	)
-	result := r.DB.Table("quizzes").Where("access_for LIKE ?", fmt.Sprintf("%%%d%%", groupID)).Find(&quizzes)
+	result := r.DB.Table("quizzes").Where("active = ?", true).Where("access_for LIKE ?", fmt.Sprintf("%%%d%%", groupID)).Find(&quizzes)
 	if result.Error != nil {
 		return nil, fmt.Errorf("quiz repo err %v", result.Error)
 	}
@@ -74,7 +72,7 @@ func (r *QuizRepo) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI,
 		quiz        entity.Quiz
 		questions   []entity.Question
 	)
-	result := r.DB.Table("quizzes").First(&quiz, quizId)
+	result := r.DB.Table("quizzes").Where("active = ?", true).First(&quiz, quizId)
 	if result.Error != nil {
 		return nil, fmt.Errorf("quiz repo err %v", result.Error)
 	}
@@ -118,7 +116,7 @@ func (r *QuizRepo) GetQuizByHash(ctx context.Context, quizHash string) (*entity.
 		quiz        entity.Quiz
 		questions   []entity.Question
 	)
-	result := r.DB.Table("quizzes").Where("quiz_hash = ?", quizHash).First(&quiz)
+	result := r.DB.Table("quizzes").Where("active = ?", true).Where("quiz_hash = ?", quizHash).First(&quiz)
 	if result.Error != nil {
 		return nil, fmt.Errorf("quiz repo err %v", result.Error)
 	}
@@ -155,73 +153,6 @@ func (r *QuizRepo) GetQuizByHash(ctx context.Context, quizHash string) (*entity.
 	}
 
 	return response, nil
-}
-
-func (r *QuizRepo) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error) {
-	var (
-		questions []entity.QuestionsUI
-		answers   []entity.AnswersOption
-	)
-
-	newQuiz := entity.Quiz{
-		AuthorID: quiz.AuthorID,
-		QuizHash: uuid.New().String(),
-		Title:    quiz.Title,
-		Active:   quiz.Active,
-	}
-	if createQuiz := r.DB.Table("quizzes").Create(&newQuiz); createQuiz.Error != nil {
-		return nil, createQuiz.Error
-	}
-
-	// добавляем вопросы к квизу
-	for _, question := range quiz.Questions {
-		newQuestions := entity.Question{
-			QuizID:      newQuiz.ID,
-			Label:       question.Label,
-			Description: question.Description,
-		}
-		if createQuestion := r.DB.Table("questions").Create(&newQuestions); createQuestion.Error != nil {
-			return nil, createQuestion.Error
-		}
-		// добавляем варианты ответа
-		for _, answer := range question.AnswersOptions {
-			newAnswerOption := entity.AnswersOption{
-				QuestionID:  newQuestions.ID,
-				Label:       answer.Label,
-				Description: answer.Description,
-			}
-			if createAnswerOption := r.DB.Table("answers_options").Create(&newAnswerOption); createAnswerOption.Error != nil {
-				return nil, createAnswerOption.Error
-			}
-
-			answers = append(answers, entity.AnswersOption{
-				ID:          newAnswerOption.ID,
-				QuestionID:  newQuestions.ID,
-				Label:       newAnswerOption.Label,
-				Description: newAnswerOption.Description,
-			})
-		}
-
-		questions = append(questions, entity.QuestionsUI{
-			ID:             newQuestions.ID,
-			Label:          newQuestions.Label,
-			Description:    newQuestions.Description,
-			AnswersOptions: answers,
-		})
-	}
-
-	createdQuiz := &entity.QuizUI{
-		ID:        newQuiz.ID,
-		AuthorID:  newQuiz.AuthorID,
-		QuizHash:  newQuiz.QuizHash,
-		Title:     newQuiz.Title,
-		Questions: questions,
-		Active:    newQuiz.Active,
-		CreatedAt: newQuiz.CreatedAt,
-		UpdatedAt: newQuiz.UpdatedAt,
-	}
-
-	return createdQuiz, nil
 }
 
 func (r *QuizRepo) SaveReviewers(ctx context.Context, reviewer *entity.Reviewers) error {

@@ -28,8 +28,8 @@ func New(logger *logger.Logger, j JWT, r QuizRepo, a AuthRepo) *ServiceUseCase {
 func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
 	var response []*entity.QuizUI
 
-	groupID := s.jwt.Parse(ctx.Value("token").(map[string]interface{})).GroupID
-	quizzes, err := s.repo.GetAllQuiz(ctx, groupID)
+	groupID := ctx.Value("token").(map[string]interface{})["GroupID"].(float64)
+	quizzes, err := s.repo.GetAllQuiz(ctx, int(groupID))
 	if err != nil {
 		return nil, err
 	}
