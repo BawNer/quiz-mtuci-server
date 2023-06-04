@@ -17,6 +17,19 @@ type serviceRoutes struct {
 	m *usecase.MiddlewareStruct
 }
 
+type K interface{}
+
+type T interface{}
+
+func containsValue(m map[K]T, v T) bool {
+	for _, x := range m {
+		if x == v {
+			return true
+		}
+	}
+	return false
+}
+
 func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interface, m *usecase.MiddlewareStruct) {
 	r := &serviceRoutes{t, l, m}
 
@@ -24,7 +37,7 @@ func newQuizRoutes(handler *gin.RouterGroup, t usecase.UseCase, l logger.Interfa
 	h.Use(m.AuthGuard())
 	{
 		h.GET("/", r.GetAllQuiz)
-		h.GET("/quiz/:hash", r.GetQuizByHash)
+		h.GET("/:hash", r.GetQuizByHash)
 		h.POST("/respond", r.SaveReviewerRespond)
 	}
 }
@@ -58,6 +71,21 @@ func (s *serviceRoutes) GetQuizByHash(c *gin.Context) {
 	quiz, err := s.t.GetQuizByHash(c, quizHash)
 	if err != nil {
 		errorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	userGroupID := int(c.Value("token").(map[string]interface{})["GroupID"].(float64))
+	IsAccess := false
+
+	for _, v := range quiz.AccessFor {
+		if v.ID == userGroupID {
+			IsAccess = true
+			break
+		}
+	}
+
+	if !IsAccess || !quiz.Active {
+		errorResponse(c, http.StatusForbidden, "No access")
 		return
 	}
 

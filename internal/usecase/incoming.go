@@ -28,8 +28,8 @@ func New(logger *logger.Logger, j JWT, r QuizRepo, a AuthRepo) *ServiceUseCase {
 func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
 	var response []*entity.QuizUI
 
-	groupID := ctx.Value("token").(map[string]interface{})["GroupID"].(float64)
-	quizzes, err := s.repo.GetAllQuiz(ctx, int(groupID))
+	groupID := s.jwt.Parse(ctx.Value("token").(map[string]interface{})).GroupID
+	quizzes, err := s.repo.GetAllQuiz(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,46 @@ func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, erro
 }
 
 func (s *ServiceUseCase) GetQuizByHash(ctx context.Context, quizHash string) (*entity.QuizUI, error) {
-	return s.repo.GetQuizByHash(ctx, quizHash)
+	var (
+		response *entity.QuizUI
+		groups   []*entity.Group
+	)
+	quiz, err := s.repo.GetQuizByHash(ctx, quizHash)
+	if err != nil {
+		return nil, err
+	}
+	t := strings.Split(strings.ReplaceAll(quiz.AccessFor, " ", ""), ",")
+	for _, v := range t {
+		g, ok := strconv.Atoi(v)
+		if ok != nil {
+			return nil, ok
+		}
+		group, err := s.auth.GetGroupByID(ctx, g)
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, group)
+	}
+	user, err := s.auth.GetUserByID(ctx, quiz.AuthorID)
+	if err != nil {
+		return nil, err
+	}
+
+	quiz.Author = user
+	response = &entity.QuizUI{
+		ID:        quiz.ID,
+		AuthorID:  quiz.AuthorID,
+		Author:    quiz.Author,
+		AccessFor: groups,
+		QuizHash:  quiz.QuizHash,
+		Title:     quiz.Title,
+		Questions: quiz.Questions,
+		Active:    quiz.Active,
+		CreatedAt: quiz.CreatedAt,
+		UpdatedAt: quiz.UpdatedAt,
+	}
+
+	return response, nil
 }
 
 func (s *ServiceUseCase) GetUserByLoginWithPassword(ctx context.Context, user entity.UserLogin) (*entity.User, error) {

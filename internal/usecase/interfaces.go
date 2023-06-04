@@ -10,7 +10,7 @@ type AnalyzeTaskIDType string
 type (
 	QuizRepo interface {
 		GetAllQuiz(ctx context.Context, groupId int) ([]*entity.QuizEntityDB, error)
-		GetQuizByHash(ctx context.Context, quizHash string) (*entity.QuizUI, error)
+		GetQuizByHash(ctx context.Context, quizHash string) (*entity.QuizEntityDB, error)
 		SaveReviewers(ctx context.Context, reviewer *entity.Reviewers) error
 	}
 	AuthRepo interface {

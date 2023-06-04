@@ -112,7 +112,7 @@ func (r *QuizRepo) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI,
 	return response, nil
 }
 
-func (r *QuizRepo) GetQuizByHash(ctx context.Context, quizHash string) (*entity.QuizUI, error) {
+func (r *QuizRepo) GetQuizByHash(ctx context.Context, quizHash string) (*entity.QuizEntityDB, error) {
 	var (
 		questionsUI []entity.QuestionsUI
 		quiz        entity.Quiz
@@ -142,10 +142,11 @@ func (r *QuizRepo) GetQuizByHash(ctx context.Context, quizHash string) (*entity.
 		})
 	}
 
-	response := &entity.QuizUI{
+	response := &entity.QuizEntityDB{
 		ID:        quiz.ID,
 		AuthorID:  quiz.AuthorID,
 		QuizHash:  quiz.QuizHash,
+		AccessFor: quiz.AccessFor,
 		Title:     quiz.Title,
 		Questions: questionsUI,
 		Active:    quiz.Active,
