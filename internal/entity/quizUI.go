@@ -8,7 +8,7 @@ type QuizUI struct {
 	ID        int           `json:"id"`
 	AuthorID  int           `json:"-"`
 	Author    *User         `json:"author"`
-	Type      string        `json:"type"`
+	AccessFor []*Group      `json:"accessFor"`
 	QuizHash  string        `json:"quizHash"`
 	Title     string        `json:"title"`
 	Questions []QuestionsUI `json:"questions"`

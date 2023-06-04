@@ -8,4 +8,5 @@ type User struct {
 	NumberZach string `json:"numberZach,omitempty"`
 	IsStudent  int    `json:"-"`
 	Token      string `json:"-"`
+	GroupID    int    `json:"groupId'"`
 }

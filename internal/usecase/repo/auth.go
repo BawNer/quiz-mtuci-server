@@ -33,3 +33,12 @@ func (r *AuthRepo) GetUserByID(ctx context.Context, id int) (*entity.User, error
 
 	return user, nil
 }
+
+func (r *AuthRepo) GetGroupByID(ctx context.Context, id int) (*entity.Group, error) {
+	var group *entity.Group
+	if err := r.DB.Table("groups").First(&group, id); err.Error != nil {
+		return nil, err.Error
+	}
+
+	return group, nil
+}

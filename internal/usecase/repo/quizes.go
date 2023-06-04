@@ -19,12 +19,12 @@ func New(pg *postgres.Postgres, l *logger.Logger) *QuizRepo {
 	return &QuizRepo{pg, l}
 }
 
-func (r *QuizRepo) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
+func (r *QuizRepo) GetAllQuiz(ctx context.Context, groupID int) ([]*entity.QuizEntityDB, error) {
 	var (
-		response []*entity.QuizUI
+		response []*entity.QuizEntityDB
 		quizzes  []entity.Quiz
 	)
-	result := r.DB.Table("quizzes").Find(&quizzes)
+	result := r.DB.Table("quizzes").Where("access_for LIKE ?", fmt.Sprintf("%%%d%%", groupID)).Find(&quizzes)
 	if result.Error != nil {
 		return nil, fmt.Errorf("quiz repo err %v", result.Error)
 	}
@@ -52,10 +52,10 @@ func (r *QuizRepo) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
 				AnswersOptions: answers,
 			})
 		}
-		response = append(response, &entity.QuizUI{
+		response = append(response, &entity.QuizEntityDB{
 			ID:        quiz.ID,
 			AuthorID:  quiz.AuthorID,
-			Type:      quiz.Type,
+			AccessFor: quiz.AccessFor,
 			QuizHash:  quiz.QuizHash,
 			Title:     quiz.Title,
 			Questions: questionsUI,
@@ -101,7 +101,6 @@ func (r *QuizRepo) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI,
 	response := &entity.QuizUI{
 		ID:        quiz.ID,
 		AuthorID:  quiz.AuthorID,
-		Type:      quiz.Type,
 		QuizHash:  quiz.QuizHash,
 		Title:     quiz.Title,
 		Questions: questionsUI,
@@ -146,7 +145,6 @@ func (r *QuizRepo) GetQuizByHash(ctx context.Context, quizHash string) (*entity.
 	response := &entity.QuizUI{
 		ID:        quiz.ID,
 		AuthorID:  quiz.AuthorID,
-		Type:      quiz.Type,
 		QuizHash:  quiz.QuizHash,
 		Title:     quiz.Title,
 		Questions: questionsUI,
@@ -166,7 +164,6 @@ func (r *QuizRepo) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.Q
 
 	newQuiz := entity.Quiz{
 		AuthorID: quiz.AuthorID,
-		Type:     quiz.Type,
 		QuizHash: uuid.New().String(),
 		Title:    quiz.Title,
 		Active:   quiz.Active,
@@ -215,7 +212,6 @@ func (r *QuizRepo) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.Q
 	createdQuiz := &entity.QuizUI{
 		ID:        newQuiz.ID,
 		AuthorID:  newQuiz.AuthorID,
-		Type:      newQuiz.Type,
 		QuizHash:  newQuiz.QuizHash,
 		Title:     newQuiz.Title,
 		Questions: questions,

@@ -4,6 +4,8 @@ import (
 	"context"
 	"quiz-mtuci-server/internal/entity"
 	"quiz-mtuci-server/pkg/logger"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,34 +26,53 @@ func New(logger *logger.Logger, j JWT, r QuizRepo, a AuthRepo) *ServiceUseCase {
 }
 
 func (s *ServiceUseCase) GetAllQuiz(ctx context.Context) ([]*entity.QuizUI, error) {
-	quizzes, err := s.repo.GetAllQuiz(ctx)
+	var response []*entity.QuizUI
+
+	groupID := ctx.Value("token").(map[string]interface{})["GroupID"].(float64)
+	quizzes, err := s.repo.GetAllQuiz(ctx, int(groupID))
 	if err != nil {
 		return nil, err
 	}
 
 	for _, quiz := range quizzes {
+		var groups []*entity.Group
+		t := strings.Split(strings.ReplaceAll(quiz.AccessFor, " ", ""), ",")
+		for _, v := range t {
+			g, ok := strconv.Atoi(v)
+			if ok != nil {
+				return nil, ok
+			}
+			group, err := s.auth.GetGroupByID(ctx, g)
+			if err != nil {
+				return nil, err
+			}
+			groups = append(groups, group)
+		}
 		user, err := s.auth.GetUserByID(ctx, quiz.AuthorID)
 		if err != nil {
 			return nil, err
 		}
 
 		quiz.Author = user
+		response = append(response, &entity.QuizUI{
+			ID:        quiz.ID,
+			AuthorID:  quiz.AuthorID,
+			Author:    quiz.Author,
+			AccessFor: groups,
+			QuizHash:  quiz.QuizHash,
+			Title:     quiz.Title,
+			Questions: quiz.Questions,
+			Active:    quiz.Active,
+			CreatedAt: quiz.CreatedAt,
+			UpdatedAt: quiz.UpdatedAt,
+		})
 	}
 
-	return quizzes, nil
-}
-
-func (s *ServiceUseCase) GetQuizById(ctx context.Context, quizId int) (*entity.QuizUI, error) {
-	return s.repo.GetQuizById(ctx, quizId)
+	return response, nil
 }
 
 func (s *ServiceUseCase) GetQuizByHash(ctx context.Context, quizHash string) (*entity.QuizUI, error) {
 	return s.repo.GetQuizByHash(ctx, quizHash)
-}
-
-func (s *ServiceUseCase) SaveQuiz(ctx context.Context, quiz *entity.QuizUI) (*entity.QuizUI, error) {
-	quiz.AuthorID = s.jwt.Parse(ctx.Value("token").(map[string]interface{})).ID
-	return s.repo.SaveQuiz(ctx, quiz)
 }
 
 func (s *ServiceUseCase) GetUserByLoginWithPassword(ctx context.Context, user entity.UserLogin) (*entity.User, error) {
@@ -63,17 +84,9 @@ func (s *ServiceUseCase) GetUserByLoginWithPassword(ctx context.Context, user en
 	if err != nil {
 		return nil, err
 	}
-	response := &entity.User{
-		ID:         foundedUser.ID,
-		Email:      foundedUser.Email,
-		Name:       foundedUser.Name,
-		PassText:   foundedUser.PassText,
-		NumberZach: foundedUser.NumberZach,
-		IsStudent:  foundedUser.IsStudent,
-		Token:      token,
-	}
+	foundedUser.Token = token
 
-	return response, nil
+	return foundedUser, nil
 }
 
 func (s *ServiceUseCase) SaveReviewers(ctx context.Context, reviewer *entity.Reviewers) error {

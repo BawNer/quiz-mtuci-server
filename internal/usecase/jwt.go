@@ -61,12 +61,14 @@ func (j *JWT) Parse(payload map[string]interface{}) entity.User {
 	name := payload["name"].(string)
 	zach := payload["numberZach"].(string)
 	is_student := payload["isStudent"].(float64)
+	group_id := payload["group_id"].(float64)
 	user := entity.User{
 		ID:         int(id),
 		Email:      email,
 		Name:       name,
 		NumberZach: zach,
 		IsStudent:  int(is_student),
+		GroupID:    int(group_id),
 	}
 
 	return user
